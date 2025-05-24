@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>900</width><height>600</height></rect></property>
+  <property name="windowTitle"><string>AGV Controller</string></property>
+  <property name="styleSheet"><string notr="true">QMainWindow { background-color: black; }</string></property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet"><string notr="true">background-color: black;</string></property>
+   <layout class="QVBoxLayout" name="mainLayout">
+    <item>
+     <layout class="QHBoxLayout" name="topLayout">
+      <!-- IP Section -->
+      <item>
+       <layout class="QVBoxLayout" name="ipSection">
+        <item>
+         <widget class="QListWidget" name="ipListWidget">
+          <property name="selectionMode"><enum>QAbstractItemView::SingleSelection</enum></property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy>
+          </property>
+          <property name="styleSheet"><string notr="true">QListWidget { background-color: #111111; color: white; border: 1px solid white; border-radius: 5px; font-size: 14px; padding: 4px; } QListWidget::item:selected { background-color: white; color: black; }</string></property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="ipRegisterLayout">
+          <item>
+           <widget class="QLabel" name="ipLabel">
+            <property name="text"><string>IP Range:</string></property>
+            <property name="styleSheet"><string notr="true">color: white; font-size: 14px;</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="ipRangeInput">
+            <property name="placeholderText"><string>e.g. 192.168.0.0/24</string></property>
+            <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"><horstretch>1</horstretch><verstretch>0</verstretch></sizepolicy></property>
+            <property name="styleSheet"><string notr="true">background-color: #111111; color: white; border: 1px solid white; border-radius: 5px; padding: 4px;</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="addIpButton">
+            <property name="text"><string>Add</string></property>
+            <property name="styleSheet"><string notr="true">background-color: #444444; color: white; border: 1px solid white; border-radius: 5px; padding: 6px 12px; font-size: 14px;</string></property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <!-- Chat Section -->
+      <item>
+       <layout class="QVBoxLayout" name="chatSection">
+        <item>
+         <widget class="QTextEdit" name="chatLog">
+          <property name="readOnly"><bool>true</bool></property>
+          <property name="styleSheet"><string notr="true">background-color: #111111; color: white; border: 1px solid white; border-radius: 5px; font-size: 14px; padding: 8px;</string></property>
+          <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Expanding"><horstretch>1</horstretch><verstretch>1</verstretch></sizepolicy></property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="chatInputLayout">
+         <item>
+          <widget class="QLabel" name="ipLabel">
+           <property name="text"><string>AI Command : </string></property>
+           <property name="styleSheet"><string notr="true">color: white; font-size: 14px;</string></property>
+          </widget>
+         </item>
+          <item>
+           <widget class="QLineEdit" name="chatInput">
+            <property name="placeholderText"><string>Type message</string></property>
+            <property name="styleSheet"><string notr="true">background-color: #111111; color: white; border: 1px solid white; border-radius: 5px; padding: 4px;</string></property>
+            <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"><horstretch>1</horstretch><verstretch>0</verstretch></sizepolicy></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="sendChatButton">
+            <property name="text"><string>Send</string></property>
+            <property name="styleSheet"><string notr="true">background-color: #444444; color: white; border: 1px solid white; border-radius: 5px; padding: 6px 12px; font-size: 14px;</string></property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <!-- Logs and Sensing -->
+    <item>
+     <layout class="QHBoxLayout" name="textLayout">
+      <item>
+       <widget class="QPlainTextEdit" name="logText">
+        <property name="styleSheet"><string notr="true">background-color: #111111; color: white; border: 1px solid white; border-radius: 10px; font-size: 14px; padding: 8px;</string></property>
+        <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Preferred"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPlainTextEdit" name="sensingText">
+        <property name="styleSheet"><string notr="true">background-color: #111111; color: white; border: 1px solid white; border-radius: 10px; font-size: 14px; padding: 8px;</string></property>
+        <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Preferred"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <!-- Control Buttons -->
+    <item>
+     <layout class="QHBoxLayout" name="buttonSection">
+      <!-- Left All Controls -->
+      <item>
+       <layout class="QVBoxLayout" name="allControlsLeft">
+        <item>
+         <widget class="QPushButton" name="startButtonLeft">
+          <property name="text"><string>All Start</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: green; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="stopButtonLeft">
+          <property name="text"><string>All Stop</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: red; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- Main Controls -->
+      <item>
+       <layout class="QGridLayout" name="gridButtons">
+        <item row="0" column="1">
+         <widget class="QPushButton" name="goButton">
+          <property name="text"><string>Go</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="leftButton">
+          <property name="text"><string>Left</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="midButton">
+          <property name="text"><string>Mid</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="rightButton">
+          <property name="text"><string>Right</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="backButton">
+          <property name="text"><string>Back</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <!-- Right All Controls -->
+      <item>
+       <layout class="QVBoxLayout" name="allControlsRight">
+        <item>
+         <widget class="QPushButton" name="startButton">
+          <property name="text"><string>Start</string></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: green; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="stopButton">
+          <property name="text"><string>Stop</string></property>
+          <property name="enabled"><bool>false</bool></property>
+          <property name="styleSheet"><string notr="true">QPushButton { background-color: red; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }</string></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

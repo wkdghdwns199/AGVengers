@@ -1,0 +1,12 @@
+{"time": "2025-05-24 21:46:38", "num1": 0.19, "num2": 0.83, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:39", "num1": 0.71, "num2": 0.42, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:39", "num1": 0.06, "num2": 0.8, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:40", "num1": 0.17, "num2": 0.9, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:40", "num1": 0.91, "num2": 0.09, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:41", "num1": 0.41, "num2": 0.26, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:42", "num1": 0.85, "num2": 0.14, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:42", "num1": 0.55, "num2": 0.89, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:43", "num1": 0.18, "num2": 0.44, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:43", "num1": 0.16, "num2": 0.53, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:44", "num1": 0.04, "num2": 0.41, "is_finish": 0, "manual_mode": "off"}
+{"time": "2025-05-24 21:46:44", "num1": 0.51, "num2": 0.52, "is_finish": 0, "manual_mode": "off"}
