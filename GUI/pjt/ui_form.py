@@ -170,13 +170,13 @@ class Ui_MainWindow(object):
         self.gridButtons.setObjectName(u"gridButtons")
         self.goButton = QPushButton(self.centralwidget)
         self.goButton.setObjectName(u"goButton")
-        self.goButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }")
+        self.goButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; } QPushButton:pressed { background-color: yellow; color: black; }")
 
         self.gridButtons.addWidget(self.goButton, 0, 1, 1, 1)
 
         self.leftButton = QPushButton(self.centralwidget)
         self.leftButton.setObjectName(u"leftButton")
-        self.leftButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }")
+        self.leftButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; } QPushButton:pressed { background-color: yellow; color: black; }")
 
         self.gridButtons.addWidget(self.leftButton, 1, 0, 1, 1)
 
@@ -188,13 +188,13 @@ class Ui_MainWindow(object):
 
         self.rightButton = QPushButton(self.centralwidget)
         self.rightButton.setObjectName(u"rightButton")
-        self.rightButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }")
+        self.rightButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; } QPushButton:pressed { background-color: yellow; color: black; }")
 
         self.gridButtons.addWidget(self.rightButton, 1, 2, 1, 1)
 
         self.backButton = QPushButton(self.centralwidget)
         self.backButton.setObjectName(u"backButton")
-        self.backButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; }")
+        self.backButton.setStyleSheet(u"QPushButton { background-color: black; color: white; border: 2px solid white; border-radius: 10px; padding: 12px 24px; font-size: 16px; font-weight: bold; } QPushButton:disabled { background-color: #444444; color: #aaaaaa; border: 2px solid #666666; } QPushButton:pressed { background-color: yellow; color: black; }")
 
         self.gridButtons.addWidget(self.backButton, 2, 1, 1, 1)
 
