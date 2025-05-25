@@ -252,6 +252,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.setWindowState(Qt.WindowNoState)
+    window.resize(900, 600)        # 원하는 크기로 설정
+    window.setWindowState(Qt.WindowNoState)  # 최대화 방지
     window.show()
     sys.exit(app.exec())
