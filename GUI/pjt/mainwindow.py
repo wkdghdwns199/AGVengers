@@ -7,11 +7,14 @@ from datetime import datetime
 import paho.mqtt.client as mqtt
 import pytz
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QListWidgetItem, QMessageBox
+    QApplication, QMainWindow, QListWidgetItem, QMessageBox, QLineEdit
 )
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QTimer, QThread, Signal
 
 from ui_form import Ui_MainWindow
+from openai import OpenAI
+
+import subprocess
 
 # 한국 시간대 설정
 korea_timezone = pytz.timezone("Asia/Seoul")
@@ -33,8 +36,52 @@ def get_local_ip():
     finally:
         s.close()
 
-
 LOCAL_IP = get_local_ip()
+
+
+def get_response(sentense):
+
+
+    # warehouse manager 역할 부여, GO/LEFT/... 규칙 정의
+    content = (
+        "You are an warehouse manager. I will input a specific sentence about the current situation, "
+        "and you need to interpret the sentence and respond with either 'GO' , 'LEFT', 'RIGHT', 'BACK', "
+        "'AUTO' with numbers or a word 'All' in the back. Do not provide any explanation, "
+        "only respond with the specific word. "
+        "ex1) I need to buy some groceries after work. -> 'IGNORE' , "
+        "ex2) go number 7. -> 'GO 7', ex3) move number 10 to left -> 'LEFT 10', "
+        "ex4) number 3 to back -> 'BACK 3' ex5) See today's amount and start the work -> 'AUTO 60' "
+        "ex6) move number 11 to front -> 'GO 11' ex7) move number 13 and 50 -> 'GO 13 50' "
+        "ex8) stop all -> 'STOP All' ex9) 14 is too fast -> 'STOP 14'"
+    )
+
+    bot = OpenAI(api_key=api_key)
+    response = bot.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": content},
+            {"role": "user",   "content": sentense}
+        ],
+        max_tokens=256,
+        temperature=1,
+        top_p=1.0,
+        frequency_penalty=0,
+        presence_penalty=0
+    )
+    return response.choices[0].message.content.strip()
+
+
+class ChatWorker(QThread):
+    result_ready = Signal(str)
+
+    def __init__(self, msg: str):
+        super().__init__()
+        self.msg = msg
+
+    def run(self):
+        resp = get_response(self.msg)
+        # 앞에 붙는 " >> " 를 포함해서 전달
+        self.result_ready.emit(" >> " + resp)
 
 
 class MainWindow(QMainWindow):
@@ -43,26 +90,24 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        # 초기 버튼 상태
+        # 온스크린 키보드 토글
+        self.ui.chatInput.mousePressEvent = lambda event: (
+            subprocess.Popen(["onboard"]),
+            QLineEdit.mousePressEvent(self.ui.chatInput, event)
+        )
+
+        # 초기 버튼 상태 설정
         self.ui.stopButton.setEnabled(False)
         self.ui.stopButtonLeft.setEnabled(False)
-        self.ui.midButton.hide()  # midButton 숨김
+        self.ui.midButton.hide()
 
-        # 시그널 연결
+        # 버튼 시그널 연결
         self.ui.startButton.clicked.connect(self.on_start)
         self.ui.stopButton.clicked.connect(self.on_stop)
         self.ui.startButtonLeft.clicked.connect(self.on_all_start)
         self.ui.stopButtonLeft.clicked.connect(self.on_all_stop)
 
-        # MQTT 초기화 및 구독
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-        self.client.connect(BROKER_ADDR, BROKER_PORT)
-        self.client.loop_start()
-        self.client.subscribe(SENSING_TOPIC, qos=1)
-
-        # 수동 명령: 누를 때만 동작
+        # 수동 명령: 눌렀을 때만 발행
         for btn, cmd in ((self.ui.goButton, "go"),
                          (self.ui.leftButton, "left"),
                          (self.ui.rightButton, "right"),
@@ -77,7 +122,7 @@ class MainWindow(QMainWindow):
         # 채팅
         self.ui.sendChatButton.clicked.connect(self.send_chat)
 
-        # 로그 및 센싱 데이터 저장
+        # 로그 및 센싱 데이터 저장소
         self.commandDataList = []
         self.sensorData      = []
 
@@ -85,6 +130,23 @@ class MainWindow(QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_ui)
         self.timer.start(500)
+
+        # MQTT 클라이언트 초기화 (연결은 비동기로)
+        self.client = mqtt.Client()
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+        self.client.loop_start()
+
+        # 화면 표시 후 MQTT 연결 시도
+        QTimer.singleShot(0, self.start_mqtt)
+
+    def start_mqtt(self):
+        """앱 로드 직후 한 번만 호출되어야 하는 연결 시도"""
+        try:
+            self.client.connect_async(BROKER_ADDR, BROKER_PORT)
+            self.client.subscribe(SENSING_TOPIC, qos=1)
+        except Exception as e:
+            QMessageBox.warning(self, "MQTT 연결 오류", f"브로커에 연결할 수 없습니다:\n{e}")
 
     def make_cmd(self, cmd_str, arg=0, finish=0):
         now = datetime.now(korea_timezone)
@@ -96,33 +158,32 @@ class MainWindow(QMainWindow):
             "sender_ip": LOCAL_IP
         }
 
-    def send_cmd(self, name, arg, finish):
+    def send_cmd(self, name, arg, finish, ip_range):
         cmd = self.make_cmd(name, arg, finish)
-        item = self.ui.ipListWidget.currentItem()
-        if item:
-            cmd["ip_range"] = item.text()
+        cmd["ip_range"] = ip_range
         self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
         self.commandDataList.append(cmd)
         print(f"[{name.upper()}] → {cmd}")
 
     def manual_start(self, name):
-        # IP 검사
         if self.ui.ipListWidget.count() == 0:
             QMessageBox.warning(self, "Warning", "Enter IP!")
             return
-        # 자동 버튼 비활성화
         for w in (self.ui.startButton, self.ui.stopButton,
                   self.ui.startButtonLeft, self.ui.stopButtonLeft):
             w.setEnabled(False)
-        # 수동 명령 발행
-        self.send_cmd(name, 100, 1)
+        # 좌표 없이 호출된 기존 수동은 arg=100, finish=1, ip_range=현재 선택된 항목
+        item = self.ui.ipListWidget.currentItem()
+        ipr = item.text() if item else ""
+        self.send_cmd(name, 100, 1, ipr)
 
     def manual_stop(self):
-        # 자동 버튼 복구
         for w in (self.ui.startButton, self.ui.startButtonLeft):
             w.setEnabled(True)
-        # 정지 명령 발행
-        self.send_cmd("stop", 0, 1)
+        # stop도 ip_list 기반
+        item = self.ui.ipListWidget.currentItem()
+        ipr = item.text() if item else ""
+        self.send_cmd("stop", 0, 1, ipr)
 
     def on_start(self):
         if self.ui.ipListWidget.count() == 0:
@@ -144,10 +205,8 @@ class MainWindow(QMainWindow):
                   self.ui.stopButtonLeft):
             w.setEnabled(False)
         self.ui.stopButton.setEnabled(True)
-        cmd = self.make_cmd("auto_start")
-        cmd["ip_range"] = self.ui.ipListWidget.currentItem().text()
-        self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
-        self.commandDataList.append(cmd)
+        ipr = self.ui.ipListWidget.currentItem().text()
+        self.send_cmd("auto_start", 0, 0, ipr)
 
     def on_stop(self):
         if self.ui.ipListWidget.count() == 0:
@@ -159,10 +218,9 @@ class MainWindow(QMainWindow):
                   self.ui.stopButtonLeft, self.ui.stopButton):
             w.setEnabled(True)
         self.ui.stopButton.setEnabled(False)
-        cmd = self.make_cmd("auto_stop")
-        cmd["ip_range"] = self.ui.ipListWidget.currentItem().text()
-        self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
-        self.commandDataList.append(cmd)
+        self.ui.stopButtonLeft.setEnabled(False)
+        ipr = self.ui.ipListWidget.currentItem().text()
+        self.send_cmd("auto_stop", 0, 0, ipr)
 
     def on_all_start(self):
         if self.ui.ipListWidget.count() == 0:
@@ -170,7 +228,7 @@ class MainWindow(QMainWindow):
             return
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Confirm")
-        dlg.setText("All AGV will start moving! Proceed???")
+        dlg.setText("All AGV will start moving! Proceed??")
         dlg.setIcon(QMessageBox.Question)
         dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         dlg.button(QMessageBox.Yes).setText("Yes")
@@ -185,10 +243,7 @@ class MainWindow(QMainWindow):
             w.setEnabled(False)
         self.ui.startButtonLeft.setEnabled(False)
         self.ui.stopButtonLeft.setEnabled(True)
-        cmd = self.make_cmd("auto_start")
-        cmd["ip_range"] = "All"
-        self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
-        self.commandDataList.append(cmd)
+        self.send_cmd("auto_start", 0, 0, "All")
 
     def on_all_stop(self):
         for w in (self.ui.goButton, self.ui.leftButton,
@@ -198,10 +253,7 @@ class MainWindow(QMainWindow):
             w.setEnabled(True)
         self.ui.stopButton.setEnabled(False)
         self.ui.stopButtonLeft.setEnabled(False)
-        cmd = self.make_cmd("auto_stop")
-        cmd["ip_range"] = "All"
-        self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
-        self.commandDataList.append(cmd)
+        self.send_cmd("auto_stop", 0, 0, "All")
 
     def add_ip_range(self):
         ip_text = self.ui.ipRangeInput.text().strip()
@@ -213,34 +265,94 @@ class MainWindow(QMainWindow):
         row = self.ui.ipListWidget.row(item)
         self.ui.ipListWidget.takeItem(row)
 
+    def display_bot_response(self, response: str):
+        # UI에 출력
+        self.ui.chatLog.append(response)
+        # " >> GO 7" 같은 prefix 제거하고 실제 명령 파싱
+        cmd = response.lstrip(" >")
+        self.process_bot_command(cmd.strip())
+
+    def process_bot_command(self, cmd: str):
+
+        if cmd[0]=="\'":
+            temp = cmd[1:len(cmd)-1]
+            cmd = temp
+
+        parts = cmd.split()
+        if not parts:
+            return
+
+        action = parts[0].upper()
+        args   = parts[1:]
+
+
+        print(action)
+        print(args)
+
+
+        # GO/BACK/LEFT/RIGHT
+        if action in ("GO","BACK","LEFT","RIGHT"):
+            for arg in args:
+                if arg.isdigit():
+                    ipr = f"172.20.10.{int(arg)}"
+                    self.send_cmd(action.lower(), 0, 1, ipr)
+
+        # STOP
+        elif action == "STOP":
+            for arg in args:
+                if arg.upper() == "ALL":
+                    self.on_all_stop()
+                elif arg.isdigit():
+                    ipr = f"172.20.10.{int(arg)}"
+                    self.send_cmd("stop", 0, 1, ipr)
+
+        # AUTO (단일 IP)
+        elif action == "AUTO":
+            for arg in args:
+                if arg.isdigit():
+                    ipr = f"172.20.10.{int(arg)}"
+                    self.send_cmd("auto_start", 0, 0, ipr)
+
+        # AUTO_ALL (전체 반복)
+        elif action == "AUTO_ALL" and args:
+            count = int(args[0]) if args[0].isdigit() else 1
+            for _ in range(count):
+                self.send_cmd("auto_start", 0, 0, "All")
+
     def send_chat(self):
         msg = self.ui.chatInput.text().strip()
         if msg:
             self.ui.chatLog.append(msg)
             self.ui.chatInput.clear()
+            self.chat_thread = ChatWorker(msg)
+            self.chat_thread.result_ready.connect(self.display_bot_response)
+            self.chat_thread.start()
 
     def update_ui(self):
         self.ui.logText.clear()
         for i, c in enumerate(self.commandDataList, 1):
             self.ui.logText.appendPlainText(
-                f"{i:2d} | {c['time']} | {c['cmd_string']} | {c.get('ip_range','')} | {c['sender_ip']}"
+                f"{i:2d} | {c['time']} | {c['cmd_string']} | "
+                f"{c.get('ip_range','')} | {c['sender_ip']}"
             )
         self.ui.sensingText.clear()
         for i, s in enumerate(self.sensorData[-15:], 1):
-            # 무시 알림 처리
             if s.get("status") == "ignored":
                 self.ui.sensingText.appendPlainText(
-                    f"{i:2d} | {s['time']} | IGNORED {s.get('cmd_string')} from {s.get('sender_ip')}"
+                    f"{i:2d} | {s['time']} | IGNORED {s.get('cmd_string')} "
+                    f"from {s.get('sender_ip')}"
                 )
             else:
                 self.ui.sensingText.appendPlainText(f"{i:2d} | {s.get('time','')}")
 
     def on_connect(self, client, userdata, flags, rc):
-        print("MQTT connected" if rc == 0 else f"Connect failed: {rc}")
+        if rc == 0:
+            print("MQTT connected")
+        else:
+            print(f"MQTT 연결 실패, 코드={rc}")
 
     def on_message(self, client, userdata, msg):
         data = json.loads(msg.payload.decode())
-        # sensingText 에 보이도록 sensorData에 저장
         self.sensorData.append(data)
 
     def closeEvent(self, event):
@@ -252,7 +364,6 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.resize(900, 600)        # 원하는 크기로 설정
-    window.setWindowState(Qt.WindowNoState)  # 최대화 방지
+    window.resize(800, 480)
     window.show()
     sys.exit(app.exec())
