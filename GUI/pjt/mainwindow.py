@@ -73,11 +73,12 @@ LOCAL_IP = get_local_ip()
 
 def get_response(sentense):
 
+
     # warehouse manager 역할 부여, GO/LEFT/... 규칙 정의
     content = (
         "You are an warehouse manager. I will input a specific sentence about the current situation, "
         "and you need to interpret the sentence and respond with either 'GO' , 'LEFT', 'RIGHT', 'BACK', "
-        "'AUTO' with numbers or a word 'All' in the back. Do not provide any explanation, "
+        "'STOP', 'AUTO' with numbers or a word 'All' in the back. Do not provide any explanation, "
         "only respond with the specific word. "
         "ex1) I need to buy some groceries after work. -> 'IGNORE' , "
         "ex2) go number 7. -> 'GO 7', ex3) move number 10 to left -> 'LEFT 10', "
@@ -199,17 +200,13 @@ class MainWindow(QMainWindow):
 
     def send_cmd(self, name, arg, finish, ip_range):
         cmd = self.make_cmd(name, arg, finish)
-        cmd["ip_range"] = ip_range.split('-')[0]
+        cmd["ip_range"] = ip_range.split(' ')[0]
         self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
         self.commandDataList.append(cmd)
 
         sendingData = {'command' : cmd["cmd_string"], 'receive_IP' : cmd["ip_range"], 'send_IP' : cmd["sender_ip"], 'time' : cmd["time"]}
 
-        if cmd["cmd_string"] == "auto_start" or cmd["cmd_string"] == "auto_stop":
-            write_data('auto_activities', sendingData)
-
-        else :
-            write_data('manual_activities', sendingData)
+        write_data('manual_activities', sendingData)
 
         print(f"[{name.upper()}] → {cmd}")
 
