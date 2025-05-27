@@ -47,7 +47,7 @@ camera = Camera()
 # --- 모델 로드 및 초기화 ---
 model = torchvision.models.resnet18(pretrained=False)
 model.fc = torch.nn.Linear(512, 2)
-model.load_state_dict(torch.load("/home/jetbot/Notebooks/road_following/523_1100.pth"))
+model.load_state_dict(torch.load("./final_movement.pth"))
 device = torch.device('cuda')
 model = model.to(device).eval().half()
 
