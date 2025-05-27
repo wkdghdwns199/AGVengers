@@ -25,6 +25,38 @@ BROKER_PORT   = 1883
 COMMAND_TOPIC = "AGV/command"
 SENSING_TOPIC = "AGV/sensing"
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+from datetime import datetime
+import time
+import random as rd
+
+# 서비스 계정 키 파일 경로를 설정
+# key 이름은 각 팀마다 생성한 키 이름으로 변경한다.
+cred = credentials.Certificate('firebase.json')
+
+# Firebase Admin SDK 초기화
+firebase_admin.initialize_app(cred)
+
+# Firestore 클라이언트 초기화
+db = firestore.client()
+
+# 한국 시간대 (Asia/Seoul)로 설정
+korea_timezone = pytz.timezone("Asia/Seoul")
+
+# 특정 컬렉션에 데이터 추가 예제
+def write_data(collection_name, data):
+    doc_ref = db.collection(collection_name).document()
+    doc_ref.set(data)
+    print(f'Data written to {collection_name}/')
+
+# 특정 컬렉션의 모든 문서 데이터 조회 예제
+def read_data(collection_name):
+    collection_ref = db.collection(collection_name)
+    docs = collection_ref.stream()
+    data = {doc.id: doc.to_dict() for doc in docs}
+    return data
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -40,7 +72,6 @@ LOCAL_IP = get_local_ip()
 
 
 def get_response(sentense):
-
 
     # warehouse manager 역할 부여, GO/LEFT/... 규칙 정의
     content = (
@@ -89,6 +120,14 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # print(read_data('IP_addresses'))
+
+        IP_ADDRESS_LIST = read_data('IP_addresses')
+
+        for info in IP_ADDRESS_LIST.values():
+            self.ui.ipListWidget.addItem(QListWidgetItem(info['IP'] + " - " + info['name']))
+
 
         # 온스크린 키보드 토글
         self.ui.chatInput.mousePressEvent = lambda event: (
@@ -160,9 +199,18 @@ class MainWindow(QMainWindow):
 
     def send_cmd(self, name, arg, finish, ip_range):
         cmd = self.make_cmd(name, arg, finish)
-        cmd["ip_range"] = ip_range
+        cmd["ip_range"] = ip_range.split('-')[0]
         self.client.publish(COMMAND_TOPIC, json.dumps(cmd), qos=1)
         self.commandDataList.append(cmd)
+
+        sendingData = {'command' : cmd["cmd_string"], 'receive_IP' : cmd["ip_range"], 'send_IP' : cmd["sender_ip"], 'time' : cmd["time"]}
+
+        if cmd["cmd_string"] == "auto_start" or cmd["cmd_string"] == "auto_stop":
+            write_data('auto_activities', sendingData)
+
+        else :
+            write_data('manual_activities', sendingData)
+
         print(f"[{name.upper()}] → {cmd}")
 
     def manual_start(self, name):
