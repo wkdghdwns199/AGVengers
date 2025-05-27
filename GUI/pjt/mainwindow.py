@@ -73,7 +73,7 @@ LOCAL_IP = get_local_ip()
 
 def get_response(sentense):
 
-
+    # api_key =
     # warehouse manager 역할 부여, GO/LEFT/... 규칙 정의
     content = (
         "You are an warehouse manager. I will input a specific sentence about the current situation, "
