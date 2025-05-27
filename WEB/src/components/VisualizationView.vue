@@ -114,7 +114,10 @@ onMounted(fetchActivityData);
 
 <template>
   <div class="container">
-    <h1>AGVengers - 물류 현황 대시보드</h1>
+    <h1>
+      <img class="logo" src="../assets/agv_logo.png" alt="AGVengers Logo" />
+      AGVengers - 물류 현황 대시보드
+    </h1>
     <div class="main-content">
       <!-- 왼쪽: 게이지 + 오늘 물류량 + 최근 로그 -->
       <div class="left-panel">
@@ -154,6 +157,12 @@ onMounted(fetchActivityData);
 </template>
 
 <style scoped>
+.logo {
+  height: 2.2em;
+  vertical-align: middle;
+  margin-right: 0.6em;
+}
+
 .container {
   width: 95vw;
   height: 90vh;
